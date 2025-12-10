@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KRC OmniDocs Implementation - Project Dashboard</title>
+    <style>
+        :root {
+            --krc-blue: #0047AB;
+            --krc-green: #28a745;
+            --krc-orange: #ff9800;
+            --krc-red: #f44336;
+            --krc-gray: #f5f5f5;
+            --syscraft-blue: #0066CC;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        .logo {
+            height: 50px;
+            object-fit: contain;
+        }
+        
+        .client-partner {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .client-partner strong {
+            display: block;
+            color: var(--krc-blue);
+            font-size: 14px;
+        }
+        
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .project-header {
+            background: linear-gradient(135deg, #0047AB, #0066CC);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .project-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .project-info {
+            background: #e8f4fd;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            border-left: 5px solid var(--krc-blue);
+        }
+        
+        .team-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .team-member {
+            padding: 15px;
+            background: var(--krc-gray);
+            border-radius: 6px;
+            text-align: center;
+            border-top: 4px solid var(--krc-blue);
+        }
+        
+        .member-role {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .milestone-timeline {
+            display: flex;
+            overflow-x: auto;
+            padding: 20px;
+            background: white;
+            margin: 20px;
+            border-radius: 8px;
+        }
+        
+        .milestone {
+            flex: 0 0 200px;
+            padding: 15px;
+            margin-right: 20px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .milestone.active {
+            border-color: var(--krc-blue);
+            background: #e8f4fd;
+        }
+        
+        .milestone.completed {
+            border-color: var(--krc-green);
+            background: #f0fff4;
+        }
+        
+        .milestone-date {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .phases-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            padding: 20px;
+        }
+        
+        .phase-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+            border-top: 5px solid var(--krc-blue);
+        }
+        
+        .phase-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            font-weight: bold;
+            color: var(--krc-blue);
+            border-bottom: 1px solid #eee;
+        }
+        
+        .tasks-container {
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .task-item {
+            padding: 12px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #ddd;
+            transition: all 0.3s ease;
+        }
+        
+        .task-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .task-pending { border-left-color: var(--krc-orange); }
+        .task-in-progress { border-left-color: var(--krc-blue); }
+        .task-completed { border-left-color: var(--krc-green); }
+        .task-blocked { border-left-color: var(--krc-red); }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-right: 10px;
+            text-transform: uppercase;
+        }
+        
+        .badge-pending { background: var(--krc-orange); color: white; }
+        .badge-in-progress { background: var(--krc-blue); color: white; }
+        .badge-completed { background: var(--krc-green); color: white; }
+        .badge-blocked { background: var(--krc-red); color: white; }
+        
+        .task-assigned {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 8px;
+            background: #e9ecef;
+            border-radius: 10px;
+            margin-left: 10px;
+        }
+        
+        .update-section {
+            background: #f8f9fa;
+            padding: 25px;
+            margin: 20px;
+            border-radius: 8px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: var(--krc-blue);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #003580;
+        }
+        
+        .btn-success {
+            background: var(--krc-green);
+            color: white;
+        }
+        
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            background: white;
+            margin: 20px;
+            border-radius: 8px;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--krc-blue);
+            margin: 10px 0;
+        }
+        
+        .blockers-section {
+            background: #fff3cd;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #ffc107;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--krc-blue);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .task-notes {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            border-left: 3px solid #dee2e6;
+        }
+        
+        .action-buttons {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .blocker-category {
+            margin-bottom: 15px;
+        }
+        
+        .blocker-category h4 {
+            margin: 10px 0;
+            color: #856404;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #ffeaa7;
+        }
+        
+        .blocker-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #ffc107;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .blocker-source {
+            font-size: 11px;
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: #666;
+        }
+        
+        .source-client { background: #e8f4fd; color: var(--krc-blue); }
+        .source-internal { background: #f0fff4; color: var(--krc-green); }
+        .source-infrastructure { background: #fff3cd; color: #856404; }
+        
+        .partner-badge {
+            background: var(--syscraft-blue);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .client-badge {
+            background: var(--krc-blue);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .project-status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with Logos -->
+    <div class="header-bar">
+        <div class="logo-container">
+            <div>
+                <div class="client-partner">
+                    <strong>CLIENT</strong>
+                    <div>Kenya Railways Corporation</div>
+                </div>
+                <div style="text-align: center; margin-top: 10px;">
+                    <div style="font-weight: bold; color: #0047AB;">KENYA RAILWAYS</div>
+                    <div style="font-size: 11px; color: #666;">right on track</div>
+                </div>
+            </div>
+            <div style="text-align: center;">
+                <div class="client-partner">
+                    <strong>IMPLEMENTATION PARTNER</strong>
+                    <div>Syscraft Limited</div>
+                </div>
+                <div style="text-align: center; margin-top: 10px;">
+                    <div style="font-weight: bold; color: #0066CC; font-size: 18px;">SySCraft</div>
+                    <div style="font-size: 10px; color: #666;">INFINITE POSSIBILITIES</div>
+                    <div style="font-size: 9px; color: #999;">www.syscraft.co.ke</div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div style="font-size: 14px; color: #666;">Project Dashboard</div>
+            <div style="font-size: 12px; color: #999;" id="currentDate"></div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard-container">
+        <div class="project-header">
+            <div class="project-title">
+                <h1>🚆 OmniDocs EDRMS Implementation</h1>
+            </div>
+            <p>Digital Transformation Project | Tracking Progress, Tasks & Milestones</p>
+            <div class="project-status">Status: Implementation Phase</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="overallProgress" style="width: 25%"></div>
+            </div>
+            <p>Overall Progress: <span id="progressText">25%</span></p>
+        </div>
+
+        <!-- Project Info -->
+        <div class="project-info">
+            <h3>📋 Project Overview</h3>
+            <p><strong>Project:</strong> OmniDocs Enterprise Document Management System Implementation</p>
+            <p><strong>Client:</strong> <span class="client-badge">Kenya Railways Corporation</span></p>
+            <p><strong>Implementation Partner:</strong> <span class="partner-badge">Syscraft Limited</span></p>
+            <p><strong>Objective:</strong> Digital transformation of document management processes across KRC</p>
+            <p><strong>Timeline:</strong> September 2023 - April 2024</p>
+            <p><strong>Current Phase:</strong> Product Upgrade & Implementation</p>
+        </div>
+
+        <!-- Team Section -->
+        <div class="team-section">
+            <div class="team-member">
+                <strong>👨‍💼 Evans</strong>
+                <div class="member-role">Project Manager</div>
+                <div class="partner-badge" style="margin-top: 5px; font-size: 10px;">Syscraft</div>
+            </div>
+            <div class="team-member">
+                <strong>👨‍💼 Mike</strong>
+                <div class="member-role">Business Analyst</div>
+                <div class="partner-badge" style="margin-top: 5px; font-size: 10px;">Syscraft</div>
+            </div>
+            <div class="team-member">
+                <strong>👩‍💻 Natasha</strong>
+                <div class="member-role">Technical Lead</div>
+                <div class="partner-badge" style="margin-top: 5px; font-size: 10px;">Syscraft</div>
+            </div>
+            <div class="team-member">
+                <strong>👩‍💼 Rita</strong>
+                <div class="member-role">Project Assistant</div>
+                <div class="partner-badge" style="margin-top: 5px; font-size: 10px;">Syscraft</div>
+            </div>
+        </div>
+
+        <!-- Milestone Timeline -->
+        <div class="milestone-timeline">
+            <div class="milestone completed">
+                <strong>📅 Project Kick-off</strong>
+                <div class="milestone-date">Sep 2023</div>
+            </div>
+            <div class="milestone active">
+                <strong>🔄 Product Upgrade</strong>
+                <div class="milestone-date">Oct-Nov 2023</div>
+            </div>
+            <div class="milestone">
+                <strong>⚙️ Implementation</strong>
+                <div class="milestone-date">Dec 2023-Jan 2024</div>
+            </div>
+            <div class="milestone">
+                <strong>🔗 Integration</strong>
+                <div class="milestone-date">Feb 2024</div>
+            </div>
+            <div class="milestone">
+                <strong>🧪 Testing (UAT)</strong>
+                <div class="milestone-date">Mar 2024</div>
+            </div>
+            <div class="milestone">
+                <strong>🚀 Go-Live</strong>
+                <div class="milestone-date">Apr 2024</div>
+            </div>
+            <div class="milestone">
+                <strong>📊 Post-Implementation</strong>
+                <div class="milestone-date">May 2024</div>
+            </div>
+        </div>
+
+        <!-- Dashboard Statistics -->
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div>Total Tasks</div>
+                <div class="stat-value" id="totalTasks">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Completed</div>
+                <div class="stat-value" id="completedTasks">0</div>
+            </div>
+            <div class="stat-card">
+                <div>In Progress</div>
+                <div class="stat-value" id="inProgressTasks">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Blocked</div>
+                <div class="stat-value" id="blockedTasks">0</div>
+            </div>
+            <div class="stat-card">
+                <div>On Schedule</div>
+                <div class="stat-value">65%</div>
+            </div>
+        </div>
+
+        <!-- Project Phases -->
+        <div class="phases-container">
+            <!-- Phase 1: Product Upgrade -->
+            <div class="phase-card">
+                <div class="phase-header">PHASE 1: PRODUCT UPGRADE & CONFIGURATION</div>
+                <div class="tasks-container" id="phase1-tasks"></div>
+                <div style="padding: 15px; text-align: center;">
+                    <button class="btn btn-sm btn-primary" onclick="addTask('phase1')">+ Add Task</button>
+                </div>
+            </div>
+
+            <!-- Phase 2: Implementation -->
+            <div class="phase-card">
+                <div class="phase-header">PHASE 2: IMPLEMENTATION & DEPLOYMENT</div>
+                <div class="tasks-container" id="phase2-tasks"></div>
+                <div style="padding: 15px; text-align: center;">
+                    <button class="btn btn-sm btn-primary" onclick="addTask('phase2')">+ Add Task</button>
+                </div>
+            </div>
+
+            <!-- Phase 3: Integration -->
+            <div class="phase-card">
+                <div class="phase-header">PHASE 3: INTEGRATION WITH SAP</div>
+                <div class="tasks-container" id="phase3-tasks"></div>
+                <div style="padding: 15px; text-align: center;">
+                    <button class="btn btn-sm btn-primary" onclick="addTask('phase3')">+ Add Task</button>
+                </div>
+            </div>
+
+            <!-- Phase 4: Testing -->
+            <div class="phase-card">
+                <div class="phase-header">PHASE 4: TESTING & VALIDATION</div>
+                <div class="tasks-container" id="phase4-tasks"></div>
+                <div style="padding: 15px; text-align: center;">
+                    <button class="btn btn-sm btn-primary" onclick="addTask('phase4')">+ Add Task</button>
+                </div>
+            </div>
+
+            <!-- Phase 5: Go-Live Preparation -->
+            <div class="phase-card">
+                <div class="phase-header">PHASE 5: GO-LIVE PREPARATION</div>
+                <div class="tasks-container" id="phase5-tasks"></div>
+                <div style="padding: 15px; text-align: center;">
+                    <button class="btn btn-sm btn-primary" onclick="addTask('phase5')">+ Add Task</button>
+                </div>
+            </div>
+
+            <!-- Phase 6: Post-Implementation -->
+            <div class="phase-card">
+                <div class="phase-header">PHASE 6: POST-IMPLEMENTATION SUPPORT</div>
+                <div class="tasks-container" id="phase6-tasks"></div>
+                <div style="padding: 15px; text-align: center;">
+                    <button class="btn btn-sm btn-primary" onclick="addTask('phase6')">+ Add Task</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Blockers Section with Categories -->
+        <div class="blockers-section">
+            <h3>🚨 Current Blockers & Challenges</h3>
+            
+            <div class="blocker-category">
+                <h4>👥 User & Stakeholder Issues</h4>
+                <div class="blocker-item">
+                    <div>
+                        Unavailability of users - only come when there's need
+                        <span class="blocker-source source-client">Client Side</span>
+                    </div>
+                    <button class="btn-sm" onclick="resolveBlocker(0)" style="background: #28a745; color: white;">Resolve</button>
+                </div>
+                <div class="blocker-item">
+                    <div>
+                        Late reporting to work affecting daily coordination
+                        <span class="blocker-source source-client">Client Side</span>
+                    </div>
+                    <button class="btn-sm" onclick="resolveBlocker(1)" style="background: #28a745; color: white;">Resolve</button>
+                </div>
+                <div class="blocker-item">
+                    <div>
+                        Client disorganization disrupting our workflow
+                        <span class="blocker-source source-client">Client Side</span>
+                    </div>
+                    <button class="btn-sm" onclick="resolveBlocker(2)" style="background: #28a745; color: white;">Resolve</button>
+                </div>
+            </div>
+            
+            <div class="blocker-category">
+                <h4>🖥️ Technical & Infrastructure Issues</h4>
+                <div class="blocker-item">
+                    <div>
+                        Network instabilities (WLAN intermittent connectivity)
+                        <span class="blocker-source source-infrastructure">Infrastructure</span>
+                    </div>
+                    <button class="btn-sm" onclick="resolveBlocker(3)" style="background: #28a745; color: white;">Resolve</button>
+                </div>
+            </div>
+            
+            <div class="blocker-category">
+                <h4>📁 Process & Documentation Issues</h4>
+                <div class="blocker-item">
+                    <div>
+                        Too many iterations to folder structures
+                        <span class="blocker-source source-client">Process</span>
+                    </div>
+                    <button class="btn-sm" onclick="resolveBlocker(4)" style="background: #28a745; color: white;">Resolve</button>
+                </div>
+                <div class="blocker-item">
+                    <div>
+                        Slowness in provision of requested information (document types, etc.)
+                        <span class="blocker-source source-client">Process</span>
+                    </div>
+                    <button class="btn-sm" onclick="resolveBlocker(5)" style="background: #28a745; color: white;">Resolve</button>
+                </div>
+                <div class="blocker-item">
+                    <div>
+                        Client disorganizing us in the process
+                        <span class="blocker-source source-client">Process</span>
+                    </div>
+                    <button class="btn-sm" onclick="resolveBlocker(6)" style="background: #28a745; color: white;">Resolve</button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="addNewBlocker()">+ Add New Blocker</button>
+                <button class="btn" onclick="generateBlockersReport()" style="background: #6c757d; color: white; margin-left: 10px;">
+                    📋 Export Blockers Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Update Section -->
+        <div class="update-section">
+            <h3>📝 Update Task Progress</h3>
+            <div class="form-grid">
+                <div>
+                    <label>Select Task:</label>
+                    <select id="taskSelect">
+                        <option value="">Choose a task to update...</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Status:</label>
+                    <select id="statusSelect">
+                        <option value="pending">🟡 Pending</option>
+                        <option value="in-progress">🔵 In Progress</option>
+                        <option value="completed">🟢 Completed</option>
+                        <option value="blocked">🔴 Blocked</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Assigned To:</label>
+                    <select id="assignedTo">
+                        <option value="Evans">Evans (PM - Syscraft)</option>
+                        <option value="Mike">Mike (BA - Syscraft)</option>
+                        <option value="Natasha">Natasha (Tech Lead - Syscraft)</option>
+                        <option value="Rita">Rita (Project Assistant - Syscraft)</option>
+                        <option value="KRC_Team">KRC Team</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Due Date:</label>
+                    <input type="date" id="dueDate">
+                </div>
+            </div>
+            <div>
+                <label>Progress Notes / Blockers:</label>
+                <textarea id="taskNotes" placeholder="Enter update details, dependencies, issues, or completion notes..."></textarea>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="updateTask()">Update Task</button>
+                <button class="btn btn-success" onclick="addNewTask()">Create New Task</button>
+                <button class="btn" onclick="exportReport()" style="background: #6c757d; color: white;">Export Full Report</button>
+            </div>
+        </div>
+
+        <!-- Project Summary Footer -->
+        <div style="background: #f8f9fa; padding: 20px; margin: 20px; border-radius: 8px; border-top: 3px solid var(--krc-blue);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4>📊 Project Summary</h4>
+                    <p style="color: #666; font-size: 14px;">
+                        <strong>Client:</strong> Kenya Railways Corporation | 
+                        <strong>Partner:</strong> Syscraft Limited |
+                        <strong>Last Updated:</strong> <span id="lastUpdated"></span>
+                    </p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="refreshDashboard()">🔄 Refresh Dashboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize current date
+        function updateDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+            document.getElementById('lastUpdated').textContent = now.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        // Project Data
+        const projectData = {
+            phases: [
+                {
+                    id: "phase1",
+                    name: "Product Upgrade & Configuration",
+                    tasks: [
+                        { 
+                            id: "p1t1", 
+                            name: "Install OmniDocs Enterprise Service (IBOSS Edition)", 
+                            status: "completed", 
+                            assigned: "Natasha",
+                            notes: "Installation completed. Awaiting system validation.",
+                            dueDate: "2023-10-15"
+                        },
+                        { 
+                            id: "p1t2", 
+                            name: "Deploy User Components (5 User Packs)", 
+                            status: "in-progress", 
+                            assigned: "Natasha",
+                            notes: "3 of 5 packs deployed. Rita assisting with user setup.",
+                            dueDate: "2023-11-30"
+                        },
+                        { 
+                            id: "p1t3", 
+                            name: "Setup Development Instance", 
+                            status: "pending", 
+                            assigned: "Natasha",
+                            notes: "Waiting for server allocation from IT department.",
+                            dueDate: "2023-12-15"
+                        },
+                        { 
+                            id: "p1t4", 
+                            name: "Configure RMS Modeler (4 Accounts)", 
+                            status: "pending", 
+                            assigned: "Mike",
+                            notes: "Requirement gathering with business units.",
+                            dueDate: "2023-12-20"
+                        }
+                    ]
+                },
+                {
+                    id: "phase2",
+                    name: "Implementation & Deployment",
+                    tasks: [
+                        { 
+                            id: "p2t1", 
+                            name: "OmniDocs EDRMS Core Implementation", 
+                            status: "in-progress", 
+                            assigned: "Natasha",
+                            notes: "40% completed. Team mobilized and working.",
+                            dueDate: "2024-01-31"
+                        },
+                        { 
+                            id: "p2t2", 
+                            name: "Configure OmniScan & Scanning Workstations", 
+                            status: "pending", 
+                            assigned: "Rita",
+                            notes: "Equipment procurement in progress.",
+                            dueDate: "2024-01-15"
+                        },
+                        { 
+                            id: "p2t3", 
+                            name: "Data Migration Preparation", 
+                            status: "blocked", 
+                            assigned: "Mike",
+                            notes: "Awaiting data classification from records department.",
+                            dueDate: "2024-01-20"
+                        },
+                        { 
+                            id: "p2t4", 
+                            name: "Infrastructure Readiness Check", 
+                            status: "pending", 
+                            assigned: "Natasha",
+                            notes: "Scheduled for next week.",
+                            dueDate: "2023-12-22"
+                        }
+                    ]
+                },
+                {
+                    id: "phase3",
+                    name: "Integration with SAP",
+                    tasks: [
+                        { 
+                            id: "p3t1", 
+                            name: "SAP-ECC 6.0 Integration Design", 
+                            status: "pending", 
+                            assigned: "Natasha",
+                            notes: "Design workshop scheduled with SAP team.",
+                            dueDate: "2024-02-10"
+                        },
+                        { 
+                            id: "p3t2", 
+                            name: "Image Enablement Integration", 
+                            status: "pending", 
+                            assigned: "Natasha",
+                            notes: "Technical specifications being developed.",
+                            dueDate: "2024-02-28"
+                        },
+                        { 
+                            id: "p3t3", 
+                            name: "SAP4HANA Compatibility Testing", 
+                            status: "pending", 
+                            assigned: "Natasha",
+                            notes: "Pending SAP team availability.",
+                            dueDate: "2024-02-15"
+                        }
+                    ]
+                },
+                {
+                    id: "phase4",
+                    name: "Testing & Validation",
+                    tasks: [
+                        { 
+                            id: "p4t1", 
+                            name: "Unit Testing - Technical Components", 
+                            status: "pending", 
+                            assigned: "Natasha",
+                            notes: "Test cases being prepared.",
+                            dueDate: "2024-03-05"
+                        },
+                        { 
+                            id: "p4t2", 
+                            name: "User Acceptance Testing (UAT)", 
+                            status: "pending", 
+                            assigned: "Mike",
+                            notes: "UAT team identification in progress.",
+                            dueDate: "2024-03-25"
+                        },
+                        { 
+                            id: "p4t3", 
+                            name: "Performance & Load Testing", 
+                            status: "pending", 
+                            assigned: "Natasha",
+                            notes: "Test environment setup required.",
+                            dueDate: "2024-03-20"
+                        }
+                    ]
+                },
+                {
+                    id: "phase5",
+                    name: "Go-Live Preparation",
+                    tasks: [
+                        { 
+                            id: "p5t1", 
+                            name: "Final Data Migration (25M Pages)", 
+                            status: "pending", 
+                            assigned: "Evans",
+                            notes: "Migration strategy approved. Ready to execute.",
+                            dueDate: "2024-04-05"
+                        },
+                        { 
+                            id: "p5t2", 
+                            name: "User Training & Documentation", 
+                            status: "pending", 
+                            assigned: "Rita",
+                            notes: "Training materials 60% complete.",
+                            dueDate: "2024-04-10"
+                        },
+                        { 
+                            id: "p5t3", 
+                            name: "Go-Live Readiness Assessment", 
+                            status: "pending", 
+                            assigned: "Evans",
+                            notes: "Checklist being prepared.",
+                            dueDate: "2024-04-12"
+                        }
+                    ]
+                },
+                {
+                    id: "phase6",
+                    name: "Post-Implementation Support",
+                    tasks: [
+                        { 
+                            id: "p6t1", 
+                            name: "Hypercare Support (30 Days)", 
+                            status: "pending", 
+                            assigned: "Natasha",
+                            notes: "Support team roster being prepared.",
+                            dueDate: "2024-05-15"
+                        },
+                        { 
+                            id: "p6t2", 
+                            name: "System Performance Monitoring", 
+                            status: "pending", 
+                            assigned: "Natasha",
+                            notes: "Monitoring tools to be configured.",
+                            dueDate: "2024-05-20"
+                        }
+                    ]
+                }
+            ],
+            blockers: [
+                "Unavailability of users - only come when there's need",
+                "Late reporting to work affecting daily coordination",
+                "Client disorganization disrupting our workflow",
+                "Network instabilities (WLAN intermittent connectivity)",
+                "Too many iterations to folder structures",
+                "Slowness in provision of requested information (document types, etc.)",
+                "Client disorganizing us in the process"
+            ]
+        };
+
+        // Initialize Dashboard
+        function initDashboard() {
+            updateDate();
+            renderAllTasks();
+            updateStatistics();
+            populateTaskSelect();
+            updateMilestoneStatus();
+        }
+
+        // Render all tasks
+        function renderAllTasks() {
+            projectData.phases.forEach(phase => {
+                const container = document.getElementById(`${phase.id}-tasks`);
+                container.innerHTML = '';
+                
+                phase.tasks.forEach(task => {
+                    const statusClass = `task-${task.status.replace('-', '')}`;
+                    const badgeClass = `badge-${task.status.replace('-', '')}`;
+                    
+                    const taskElement = document.createElement('div');
+                    taskElement.className = `task-item ${statusClass}`;
+                    taskElement.innerHTML = `
+                        <div>
+                            <span class="status-badge ${badgeClass}">${task.status.toUpperCase()}</span>
+                            <strong>${task.name}</strong>
+                            <span class="task-assigned">${task.assigned}</span>
+                        </div>
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                            📅 Due: ${task.dueDate}
+                        </div>
+                        <div class="task-notes">
+                            ${task.notes}
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm" onclick="editTask('${task.id}')" style="background: #6c757d; color: white;">Edit</button>
+                        </div>
+                    `;
+                    container.appendChild(taskElement);
+                });
+            });
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            let total = 0;
+            let completed = 0;
+            let inProgress = 0;
+            let blocked = 0;
+            
+            projectData.phases.forEach(phase => {
+                phase.tasks.forEach(task => {
+                    total++;
+                    if (task.status === 'completed') completed++;
+                    if (task.status === 'in-progress') inProgress++;
+                    if (task.status === 'blocked') blocked++;
+                });
+            });
+            
+            document.getElementById('totalTasks').textContent = total;
+            document.getElementById('completedTasks').textContent = completed;
+            document.getElementById('inProgressTasks').textContent = inProgress;
+            document.getElementById('blockedTasks').textContent = blocked;
+            
+            const progressPercentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+            document.getElementById('overallProgress').style.width = `${progressPercentage}%`;
+            document.getElementById('progressText').textContent = `${progressPercentage}%`;
+        }
+
+        // Populate task select dropdown
+        function populateTaskSelect() {
+            const select = document.getElementById('taskSelect');
+            select.innerHTML = '<option value="">Choose a task to update...</option>';
+            
+            projectData.phases.forEach(phase => {
+                phase.tasks.forEach(task => {
+                    const option = document.createElement('option');
+                    option.value = task.id;
+                    option.textContent = `[${phase.name.substring(0, 20)}...] ${task.name.substring(0, 40)}...`;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // Update milestone status
+        function updateMilestoneStatus() {
+            const milestones = document.querySelectorAll('.milestone');
+            milestones.forEach((milestone, index) => {
+                if (index === 0) {
+                    milestone.classList.add('completed');
+                } else if (index === 1) {
+                    milestone.classList.add('active');
+                }
+            });
+        }
+
+        // Add task to specific phase
+        function addTask(phaseId) {
+            const taskName = prompt("Enter task name:");
+            if (!taskName) return;
+            
+            const phase = projectData.phases.find(p => p.id === phaseId);
+            if (phase) {
+                const newTask = {
+                    id: `${phaseId}t${Date.now()}`,
+                    name: taskName,
+                    status: "pending",
+                    assigned: "Evans",
+                    notes: "New task added",
+                    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                };
+                
+                phase.tasks.push(newTask);
+                renderAllTasks();
+                updateStatistics();
+                populateTaskSelect();
+                alert("Task added successfully!");
+            }
+        }
+
+        // Create new task (general)
+        function addNewTask() {
+            const phaseId = prompt("Enter phase (1-6):");
+            if (!phaseId || phaseId < 1 || phaseId > 6) {
+                alert("Please enter a valid phase number (1-6)");
+                return;
+            }
+            
+            addTask(`phase${phaseId}`);
+        }
+
+        // Edit task
+        function editTask(taskId) {
+            let task = null;
+            
+            // Find the task
+            for (const phase of projectData.phases) {
+                task = phase.tasks.find(t => t.id === taskId);
+                if (task) break;
+            }
+            
+            if (task) {
+                document.getElementById('taskSelect').value = taskId;
+                document.getElementById('statusSelect').value = task.status;
+                document.getElementById('assignedTo').value = task.assigned;
+                document.getElementById('taskNotes').value = task.notes;
+                document.getElementById('dueDate').value = task.dueDate;
+                
+                document.querySelector('.update-section').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Update task
+        function updateTask() {
+            const taskId = document.getElementById('taskSelect').value;
+            const status = document.getElementById('statusSelect').value;
+            const assigned = document.getElementById('assignedTo').value;
+            const notes = document.getElementById('taskNotes').value;
+            const dueDate = document.getElementById('dueDate').value;
+            
+            if (!taskId) {
+                alert("Please select a task first!");
+                return;
+            }
+            
+            // Find and update task
+            for (const phase of projectData.phases) {
+                const task = phase.tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.status = status;
+                    task.assigned = assigned || task.assigned;
+                    task.notes = notes || task.notes;
+                    task.dueDate = dueDate || task.dueDate;
+                    
+                    break;
+                }
+            }
+            
+            renderAllTasks();
+            updateStatistics();
+            document.getElementById('taskSelect').value = '';
+            document.getElementById('taskNotes').value = '';
+            alert("Task updated successfully!");
+        }
+
+        // Resolve blocker
+        function resolveBlocker(index) {
+            if (confirm("Mark this blocker as resolved?")) {
+                alert(`Blocker "${projectData.blockers[index]}" marked as resolved.`);
+                // In a real system, you would remove it from the array
+                // projectData.blockers.splice(index, 1);
+            }
+        }
+
+        // Add new blocker
+        function addNewBlocker() {
+            const blocker = prompt("Enter new blocker description:");
+            if (blocker) {
+                projectData.blockers.push(blocker);
+                alert("Blocker added! Refresh to see in categorized list.");
+            }
+        }
+
+        // Generate blockers report
+        function generateBlockersReport() {
+            const blockersText = projectData.blockers.map((b, i) => `${i+1}. ${b}`).join('\n');
+            const report = `KRC OmniDocs Project - Blockers Report\nDate: ${new Date().toLocaleDateString()}\n\nBLOCKERS:\n${blockersText}\n\nTotal Blockers: ${projectData.blockers.length}\n\nRecommended Actions:\n1. Schedule regular stakeholder meetings\n2. Establish clear communication channels\n3. Document all requirements formally\n4. Escalate infrastructure issues to IT department`;
+            
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `krc-blockers-report-${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            
+            alert("Blockers report exported!");
+        }
+
+        // Export full report
+        function exportReport() {
+            const exportData = {
+                timestamp: new Date().toISOString(),
+                project: "KRC OmniDocs Implementation",
+                client: "Kenya Railways Corporation",
+                partner: "Syscraft Limited",
+                summary: {
+                    totalTasks: document.getElementById('totalTasks').textContent,
+                    completed: document.getElementById('completedTasks').textContent,
+                    inProgress: document.getElementById('inProgressTasks').textContent,
+                    blocked: document.getElementById('blockedTasks').textContent,
+                    progress: document.getElementById('progressText').textContent
+                },
+                blockers: projectData.blockers,
+                phases: projectData.phases
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `krc-project-report-${new Date().toISOString().split('T')[0]}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        // Refresh dashboard
+        function refreshDashboard() {
+            updateDate();
+            updateStatistics();
+            alert("Dashboard refreshed!");
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
